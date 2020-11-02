@@ -27,16 +27,24 @@ if __name__ == '__main__':
     # x_test는 (10000, 784) size의 행렬이다. 총 10000개의 데이터셋이 있다.
     (_, _), (x_test, t_test) = load_data() 
 
-    # Y는 (10000, 10) size의 행렬이다. 10개 중 가장 큰 값이 그 데이터의 예상되는 숫자이다.
-    Y = layer_2.transmit(
-        layer_1.transmit(
-            layer_0.transmit(x_test)))
-
+    batch_size = 100
     accuracy_cnt = 0
-    for i, expected_number in enumerate(t_test):
-        p_number = np.argmax(Y[i])
-        if p_number == expected_number:
-            accuracy_cnt += 1
+    for i in range(0, len(x_test), 100):
+        x_batch = x_test[i: i+batch_size]
+        y_batch = layer_2.transmit(layer_1.transmit(layer_0.transmit(x_batch)))
+        p_batch = np.argmax(y_batch, axis=1)
+        accuracy_cnt += np.sum(p_batch == t_test[i:i+batch_size])
+
+    # Y는 (10000, 10) size의 행렬이다. 10개 중 가장 큰 값이 그 데이터의 예상되는 숫자이다.
+    #Y = layer_2.transmit(
+    #    layer_1.transmit(
+    #        layer_0.transmit(x_test)))
+
+    #accuracy_cnt = 0
+    #for i, expected_number in enumerate(t_test):
+    #    p_number = np.argmax(Y[i])
+    #    if p_number == expected_number:
+    #        accuracy_cnt += 1
 
     print("Accuracy: ", float(accuracy_cnt) / len(x_test))
 
