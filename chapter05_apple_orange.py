@@ -1,5 +1,5 @@
 
-from core.layer import MulLayer, AddLayer
+from core.layers import MulLayer, AddLayer
 
 apple = 100
 num_apple = 2

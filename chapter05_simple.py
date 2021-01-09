@@ -1,6 +1,6 @@
 
 
-from core.layer import MulLayer
+from core.layers import MulLayer
 
 mul_apple_layer = MulLayer()
 mul_tax_layer = MulLayer()
