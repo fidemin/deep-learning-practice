@@ -1,5 +1,8 @@
 import numpy as np
 
+from core.activation import softmax
+from core.loss import cross_entropy_error
+
 
 class MulLayer:
     def __init__(self):
@@ -48,7 +51,7 @@ class SigmoidLayer:
     def __init__(self):
         self.out = None
 
-    def forword(self, x):
+    def forward(self, x):
         out = 1 / (1 + np.exp(-x))
         self.out = out
         return out
@@ -87,3 +90,22 @@ class AffineLayer:
 
         dx = dx.reshape(*self.original_x_shape)
         return dx
+
+
+class SoftmaxWithLossLayer:
+    def __init__(self):
+        self.y = None
+        self.t = None
+
+    def forward(self, x, t):
+        self.t = t
+        self.y = softmax(x)
+        loss = cross_entropy_error(self.y, self.t)
+        return loss
+
+    def backward(self, dout=1):
+        batch_size = self.t.shape[0]
+        # 데이터 당 1개의 오차를 전달한다.
+        # TODO: 왜 데이터당으로 굳이 나누는지 확인 필요
+        dx = (self.y - self.t) / batch_size
+        return dx * dout
