@@ -1,8 +1,11 @@
+from collections import OrderedDict
+
 import numpy as np
 
 from core.activation import sigmoid, softmax
-from core.loss import cross_entropy_error
 from core.gradient import numerical_gradient
+from core.layers import AffineLayer, ReluLayer, SoftmaxWithLossLayer
+from core.loss import cross_entropy_error
 
 
 def sigmoid_grad(x):
@@ -80,5 +83,63 @@ class TwoLayersNet:
         grads['W1'] = np.dot(x.T, dz1)
         grads['b1'] = np.sum(dz1, axis=0)
         # print(grads['W1'][0][:10]) -> 0 밖에 안나온다. 이유를 찾아야 한다.
+
+        return grads
+
+
+class FastTwoLayerNet:
+    def __init__(self, input_size, hidden_size, output_size, weight_init_std=0.01):
+        # 가중치 초기화
+        self.params = {
+            'W1': weight_init_std * np.random.randn(input_size, hidden_size),
+            'b1': np.zeros(hidden_size),
+            'W2': weight_init_std * np.random.randn(hidden_size, output_size),
+            'b2': np.zeros(output_size)
+        }
+
+        # 계층 생성
+        self.layers = OrderedDict()
+        self.layers['Affine1'] = AffineLayer(self.params['W1'], self.params['b1'])
+        self.layers['Relu1'] = ReluLayer()
+        self.layers['Affine2'] = AffineLayer(self.params['W2'], self.params['b2'])
+        self.last_layer = SoftmaxWithLossLayer()
+
+    def predict(self, x):
+        for layer in self.layers.values():
+            x = layer.forward(x)
+
+        return x
+
+    def loss(self, x, t):
+        y = self.predict(x)
+        return self.last_layer.forward(y, t)
+
+    def accuracy(self, x, t):
+        y = self.predict(x)
+        y = np.argmax(y, axis=1)
+        t = np.argmax(t, axis=1)
+
+        accuracy = np.sum(y == t) / float(x.shape[0])
+        return accuracy
+
+    def gradient(self, x, t):
+        # 순전파
+        self.loss(x, t)
+
+        # 역전파
+        dout = 1
+        dout = self.last_layer.backward(dout)
+        layers = list(self.layers.values())
+        layers.reverse()
+        for layer in layers:
+            dout = layer.backward(dout)
+
+        # 결과 저장
+        grads = {
+            'W1': self.layers['Affine1'].dW,
+            'b1': self.layers['Affine1'].db,
+            'W2': self.layers['Affine2'].dW,
+            'b2': self.layers['Affine2'].db
+        }
 
         return grads
