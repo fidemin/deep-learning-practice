@@ -87,7 +87,7 @@ class TwoLayersNet:
         return grads
 
 
-class FastTwoLayerNet:
+class FastTwoLayersNet:
     def __init__(self, input_size, hidden_size, output_size, weight_init_std=0.01):
         # 가중치 초기화
         self.params = {
