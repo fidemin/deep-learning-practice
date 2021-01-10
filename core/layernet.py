@@ -87,7 +87,7 @@ class TwoLayersNet:
         return grads
 
 
-class FastTwoLayersNet:
+class BackproTwoLayersNet:
     def __init__(self, input_size, hidden_size, output_size, weight_init_std=0.01):
         # 가중치 초기화
         self.params = {
@@ -142,4 +142,15 @@ class FastTwoLayersNet:
             'b2': self.layers['Affine2'].db
         }
 
+        return grads
+
+    def numerical_gradient(self, x, t):
+        loss_W = lambda _: self.loss(x, t)
+
+        grads = {
+            'W1': numerical_gradient(loss_W, self.params['W1']),
+            'b1': numerical_gradient(loss_W, self.params['b1']),
+            'W2': numerical_gradient(loss_W, self.params['W2']),
+            'b2': numerical_gradient(loss_W, self.params['b2'])
+        }
         return grads

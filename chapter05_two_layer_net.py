@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from core.layernet import FastTwoLayersNet
+from core.layernet import BackproTwoLayersNet
 from dataset.mnist import load_mnist
 
 (x_train, t_train), (x_test, t_test) = load_mnist(normalize=True, one_hot_label=True)
@@ -19,7 +19,7 @@ test_acc_list = []
 iter_per_epoch = max(train_size / batch_size, 1)
 print('train size:', train_size, 'input size:', input_size, 'iter_per_epoch:', iter_per_epoch)
 
-network = FastTwoLayersNet(input_size=input_size, hidden_size=50, output_size=10)
+network = BackproTwoLayersNet(input_size=input_size, hidden_size=50, output_size=10)
 
 for i in range(num_of_iters):
     batch_mask = np.random.choice(train_size, batch_size)
