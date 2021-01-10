@@ -106,6 +106,7 @@ class SoftmaxWithLossLayer:
     def backward(self, dout=1):
         batch_size = self.t.shape[0]
         # 데이터 당 1개의 오차를 전달한다.
-        # TODO: 왜 데이터당으로 굳이 나누는지 확인 필요
+        # Why? (y - t)의 식은 batch size가 1이라고 가정하고 계산했을 때 결과이다.
+        # 역전파 시, dout=1부터 시작하므로 batch_size로 나누어야 한다.
         dx = (self.y - self.t) / batch_size
         return dx * dout
