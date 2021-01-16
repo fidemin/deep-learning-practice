@@ -106,7 +106,10 @@ class SoftmaxWithLossLayer:
     def backward(self, dout=1):
         batch_size = self.t.shape[0]
         # 데이터 당 1개의 오차를 전달한다.
-        # Why? (y - t)의 식은 batch size가 1이라고 가정하고 계산했을 때 결과이다.
-        # 역전파 시, dout=1부터 시작하므로 batch_size로 나누어야 한다.
+        # Why? 수식적으로 batch_size로 나누어 주는게 맞다. (numerical_gradient 값과 오차가 거의 안난다.)
+        # https://stackoverflow.com/questions/65275522/why-is-softmax-classifier-gradient-divided-by-batch-size-cs231n
+        # batch_size로 나누지 않았을 경우, gradient 값이 너무 커지기 때문에, 수렴하지 않는다.
+        # batch_size / 2 로 나누었을 경우 (gradient이 2배 가량 큰 경우), 약간 overfitting 된다.
+        # batch_size * 2 로 나누었을 경우, 약간 underfitting 된다.
         dx = (self.y - self.t) / batch_size
         return dx * dout
