@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from core.layernet import BackproTwoLayersNet
+from core.layernet import BackpropagationTwoLayersNet
 from core.parameter_updaters import SGD, Momentum, AdaGrad
 from dataset.mnist import load_mnist
 
@@ -20,7 +20,7 @@ test_acc_list = []
 iter_per_epoch = max(train_size / batch_size, 1)
 print('train size:', train_size, 'input size:', input_size, 'iter_per_epoch:', iter_per_epoch)
 
-network = BackproTwoLayersNet(input_size=input_size, hidden_size=50, output_size=10)
+network = BackpropagationTwoLayersNet(input_size=input_size, hidden_size=50, output_size=10, use_xavier_init=True)
 # parameter_updater = SGD(learning_rate=0.01)
 # parameter_updater = Momentum()
 parameter_updater = AdaGrad()
@@ -53,4 +53,3 @@ plt.ylabel("accuracy")
 plt.ylim(0, 1.0)
 plt.legend(loc='lower right')
 plt.show()
-

@@ -87,13 +87,20 @@ class TwoLayersNet:
         return grads
 
 
-class BackproTwoLayersNet:
-    def __init__(self, input_size, hidden_size, output_size, weight_init_std=0.01):
-        # 가중치 초기화
+class BackpropagationTwoLayersNet:
+    def __init__(self, input_size, hidden_size, output_size, weight_init_std=0.01, use_xavier_init=False):
+        # 가중치 표준편차 초기값
+        if use_xavier_init:
+            weight_init_std_w1 = 1 / np.sqrt(input_size)
+            weight_init_std_w2 = 1 / np.sqrt(hidden_size)
+        else:
+            weight_init_std_w1 = weight_init_std
+            weight_init_std_w2 = weight_init_std
+
         self.params = {
-            'W1': weight_init_std * np.random.randn(input_size, hidden_size),
+            'W1': weight_init_std_w1 * np.random.randn(input_size, hidden_size),
             'b1': np.zeros(hidden_size),
-            'W2': weight_init_std * np.random.randn(hidden_size, output_size),
+            'W2': weight_init_std_w2 * np.random.randn(hidden_size, output_size),
             'b2': np.zeros(output_size)
         }
 
