@@ -6,11 +6,12 @@ from core.activation import softmax
 from core.loss import cross_entropy_error
 
 
-class LayerType(enum.Enum):
-    Affine = 1
-    Activation = 2
-    Finish = 3
-    Other = 4
+class LayerType:
+    Affine = 'affine'
+    Activation = 'activation'
+    Dropout = 'dropout'
+    Loss = 'loss'
+    Other = 'others'
 
 
 class MulLayer:
@@ -112,8 +113,27 @@ class AffineLayer:
         return dx
 
 
+class DropoutLayer:
+    type = LayerType.Dropout
+
+    def __init__(self, dropout_ratio=0):
+        self._dropout_ratio = dropout_ratio
+        self.mask = None
+
+    def forward(self, x, train_flag=True):
+        if self._dropout_ratio and train_flag:
+            self.mask = np.random.rand(*x.shape) > self._dropout_ratio
+            return x * self.mask
+        else:
+            # 훈련이 아닌 경우 그대로 내보낸다.
+            return x
+
+    def backward(self, dout):
+        return dout * self.mask
+
+
 class SoftmaxWithLossLayer:
-    type = LayerType.Finish
+    type = LayerType.Loss
 
     def __init__(self):
         self.y = None

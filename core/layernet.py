@@ -4,7 +4,7 @@ import numpy as np
 
 from core.activation import sigmoid, softmax
 from core.gradient import numerical_gradient
-from core.layers import AffineLayer, ReluLayer, SoftmaxWithLossLayer, SigmoidLayer, LayerType
+from core.layers import AffineLayer, ReluLayer, SoftmaxWithLossLayer, SigmoidLayer, LayerType, DropoutLayer
 from core.loss import cross_entropy_error
 
 
@@ -171,7 +171,7 @@ class ActivationType:
 class MultiLayerNet:
     def __init__(self, input_size: int, hidden_size_list: list, output_size: int,
                  *, weight_init_std_deviation=0.01, use_xavier_init=False, use_he_init=False,
-                 activation=ActivationType.Sigmoid, weight_decay_lambda=0):
+                 activation=ActivationType.Sigmoid, weight_decay_lambda=0, dropout_ratio=0):
 
         assert not (use_xavier_init and use_he_init), 'both use_xavier_init or use_he_init can not be True'
         all_size_list = [input_size] + hidden_size_list + [output_size]
@@ -199,19 +199,25 @@ class MultiLayerNet:
             self._layers.append(AffineLayer(param['W'], param['b']))
 
             if i < (len(all_size_list) - 2):
-                # 마지막 layer는 activation function을 적용하지 않는다.
+                # 마지막 layer는 output으로 가므로 activation function을 적용하지 않는다.
                 if activation == ActivationType.Sigmoid:
                     self._layers.append(SigmoidLayer())
                 elif activation == ActivationType.Relu:
                     self._layers.append(ReluLayer())
                 else:
                     assert False, f'{activation} activation is not a proper value'
+                # activation 연산이 끝난 후에, dropout을 적용한다.
+                # 마지막 layer는 output으로 가므로 dropout을 적용하지 않는다.
+                self._layers.append(DropoutLayer(dropout_ratio=dropout_ratio))
 
         self._last_layer = SoftmaxWithLossLayer()
 
-    def predict(self, x):
+    def predict(self, x, train_flag=True):
         for layer in self._layers:
-            x = layer.forward(x)
+            if layer.type == LayerType.Dropout:
+                x = layer.forward(x, train_flag=train_flag)
+            else:
+                x = layer.forward(x)
         return x
 
     def loss(self, x, t):
@@ -247,7 +253,7 @@ class MultiLayerNet:
         return gradients
 
     def accuracy(self, x, t):
-        y = self.predict(x)
+        y = self.predict(x, train_flag=False)
         y = np.argmax(y, axis=1)
         t = np.argmax(t, axis=1)
 
