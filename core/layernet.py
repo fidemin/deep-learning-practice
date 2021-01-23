@@ -171,11 +171,12 @@ class ActivationType:
 class MultiLayerNet:
     def __init__(self, input_size: int, hidden_size_list: list, output_size: int,
                  *, weight_init_std_deviation=0.01, use_xavier_init=False, use_he_init=False,
-                 activation=ActivationType.Sigmoid):
+                 activation=ActivationType.Sigmoid, weight_decay_lambda=0):
 
         assert not (use_xavier_init and use_he_init), 'both use_xavier_init or use_he_init can not be True'
         all_size_list = [input_size] + hidden_size_list + [output_size]
 
+        self._weight_decay_lambda = weight_decay_lambda
         self.params = []
         self._layers = []
         for i in range(len(all_size_list)-1):
@@ -184,9 +185,9 @@ class MultiLayerNet:
 
             # if use_xavier_init or use_he_init is True, weight_init_std value is override
             if use_xavier_init:
-                std_deviation = 1 / np.sqrt(this_layer_size)
+                std_deviation = np.sqrt(1.0 / this_layer_size)
             elif use_he_init:
-                std_deviation = np.sqrt(2) / np.sqrt(this_layer_size)
+                std_deviation = np.sqrt(2.0 / this_layer_size)
             else:
                 std_deviation = weight_init_std_deviation
 
@@ -215,7 +216,13 @@ class MultiLayerNet:
 
     def loss(self, x, t):
         y = self.predict(x)
-        return self._last_layer.forward(y, t)
+
+        weight_decay = 0
+        if self._weight_decay_lambda:
+            for param in self.params:
+                W = param['W']
+                weight_decay += 0.5 * self._weight_decay_lambda * np.sum(W ** 2)
+        return self._last_layer.forward(y, t) + weight_decay
 
     def gradient(self, x, t):
 
@@ -232,7 +239,7 @@ class MultiLayerNet:
         for layer in self._layers:
             if layer.type == LayerType.Affine:
                 gradient = {
-                    'W': layer.dW,
+                    'W': layer.dW + self._weight_decay_lambda * layer.W,
                     'b': layer.db
                 }
                 gradients.append(gradient)

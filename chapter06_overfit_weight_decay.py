@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from core.layernet import MultiLayerNet, ActivationType
-from core.parameter_updaters import AdaGrad
+from core.parameter_updaters import SGD, AdaGrad
 from dataset.mnist import load_mnist
 
 (x_train, t_train), (x_test, t_test) = load_mnist(normalize=True, one_hot_label=True)
@@ -14,9 +14,9 @@ output_size = t_train.shape[1]
 
 network = MultiLayerNet(
     input_size=input_size, hidden_size_list=[100, 100, 100, 100, 100, 100], output_size=output_size,
-    use_xavier_init=True, activation=ActivationType.Relu)
+    use_he_init=True, activation=ActivationType.Relu, weight_decay_lambda=0.1)
 
-updater = AdaGrad(learning_rate=0.01)
+updater = SGD(learning_rate=0.01)
 
 train_acc_list = []
 test_acc_list = []
@@ -26,7 +26,7 @@ batch_size = 100
 
 iter_per_epoch = max(train_size / batch_size, 1)
 epoch_cnt = 0
-max_epochs = 200
+max_epochs = 201
 
 for i in range(1000000000):
     batch_mask = np.random.choice(train_size, batch_size)
