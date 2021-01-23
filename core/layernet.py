@@ -4,7 +4,7 @@ import numpy as np
 
 from core.activation import sigmoid, softmax
 from core.gradient import numerical_gradient
-from core.layers import AffineLayer, ReluLayer, SoftmaxWithLossLayer
+from core.layers import AffineLayer, ReluLayer, SoftmaxWithLossLayer, SigmoidLayer, LayerType
 from core.loss import cross_entropy_error
 
 
@@ -161,3 +161,87 @@ class BackpropagationTwoLayersNet:
             'b2': numerical_gradient(loss_W, self.params['b2'])
         }
         return grads
+
+
+class ActivationType:
+    Sigmoid = 'sigmoid'
+    Relu = 'relu'
+
+
+class MultiLayerNet:
+    def __init__(self, input_size: int, hidden_size_list: list, output_size: int,
+                 *, weight_init_std_deviation=0.01, use_xavier_init=False, use_he_init=False,
+                 activation=ActivationType.Sigmoid):
+
+        assert not (use_xavier_init and use_he_init), 'both use_xavier_init or use_he_init can not be True'
+        all_size_list = [input_size] + hidden_size_list + [output_size]
+
+        self.params = []
+        self._layers = []
+        for i in range(len(all_size_list)-1):
+            this_layer_size = all_size_list[i]
+            next_layer_size = all_size_list[i + 1]
+
+            # if use_xavier_init or use_he_init is True, weight_init_std value is override
+            if use_xavier_init:
+                std_deviation = 1 / np.sqrt(this_layer_size)
+            elif use_he_init:
+                std_deviation = np.sqrt(2) / np.sqrt(this_layer_size)
+            else:
+                std_deviation = weight_init_std_deviation
+
+            param = {
+                'W': std_deviation * np.random.randn(this_layer_size, next_layer_size),
+                'b': np.zeros(next_layer_size)
+            }
+            self.params.append(param)
+            self._layers.append(AffineLayer(param['W'], param['b']))
+
+            if i < (len(all_size_list) - 2):
+                # 마지막 layer는 activation function을 적용하지 않는다.
+                if activation == ActivationType.Sigmoid:
+                    self._layers.append(SigmoidLayer())
+                elif activation == ActivationType.Relu:
+                    self._layers.append(ReluLayer())
+                else:
+                    assert False, f'{activation} activation is not a proper value'
+
+        self._last_layer = SoftmaxWithLossLayer()
+
+    def predict(self, x):
+        for layer in self._layers:
+            x = layer.forward(x)
+        return x
+
+    def loss(self, x, t):
+        y = self.predict(x)
+        return self._last_layer.forward(y, t)
+
+    def gradient(self, x, t):
+
+        # forward propagation
+        self.loss(x, t)
+
+        # back propagation
+        # init value is 1
+        dout = self._last_layer.backward(1)
+        for layer in reversed(self._layers):
+            dout = layer.backward(dout)
+
+        gradients = []
+        for layer in self._layers:
+            if layer.type == LayerType.Affine:
+                gradient = {
+                    'W': layer.dW,
+                    'b': layer.db
+                }
+                gradients.append(gradient)
+
+        return gradients
+
+    def accuracy(self, x, t):
+        y = self.predict(x)
+        y = np.argmax(y, axis=1)
+        t = np.argmax(t, axis=1)
+
+        return np.sum(y == t) / float(x.shape[0])

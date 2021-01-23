@@ -1,10 +1,21 @@
+import enum
+
 import numpy as np
 
 from core.activation import softmax
 from core.loss import cross_entropy_error
 
 
+class LayerType(enum.Enum):
+    Affine = 1
+    Activation = 2
+    Finish = 3
+    Other = 4
+
+
 class MulLayer:
+    type = LayerType.Other
+
     def __init__(self):
         self.x = None
         self.y = None
@@ -21,6 +32,8 @@ class MulLayer:
 
 
 class AddLayer:
+    type = LayerType.Other
+
     def __init__(self):
         pass
 
@@ -32,22 +45,27 @@ class AddLayer:
 
 
 class ReluLayer:
+    type = LayerType.Activation
+
     def __init__(self):
         self.x = None
+        self._mask = None
 
     def forward(self, x):
-        self.mask = (x <= 0)
+        self._mask = (x <= 0)
         out = x.copy()
-        out[self.mask] = 0
+        out[self._mask] = 0
         return out
 
     def backward(self, dout):
-        dout[self.mask] = 0
+        dout[self._mask] = 0
         dx = dout
         return dx
 
 
 class SigmoidLayer:
+    type = LayerType.Activation
+
     def __init__(self):
         self.out = None
 
@@ -57,11 +75,13 @@ class SigmoidLayer:
         return out
 
     def backward(self, dout):
-        dx = dout * self.out (1.0 - self.out)
+        dx = dout * self.out * (1.0 - self.out)
         return dx
 
 
 class AffineLayer:
+    type = LayerType.Affine
+
     def __init__(self, W, b):
         self.W = W
         self.b = b
@@ -93,6 +113,8 @@ class AffineLayer:
 
 
 class SoftmaxWithLossLayer:
+    type = LayerType.Finish
+
     def __init__(self):
         self.y = None
         self.t = None
