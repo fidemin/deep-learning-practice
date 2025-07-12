@@ -7,6 +7,7 @@ class Agent:
     def __init__(
         self,
         action_size: int,
+        *,
         epsilon: float = 0.1,
     ):
         self._action_size = action_size

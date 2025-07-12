@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.12"
 numpy = "^2.3.1"
 typeguard = "^4.4.4"
+matplotlib = "^3.10.3"
 
 
 [build-system]
