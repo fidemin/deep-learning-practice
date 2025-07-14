@@ -7,16 +7,17 @@ from src.bandit.bandit import Bandit
 if __name__ == "__main__":
     runs = 200
     steps = 1000
+    epsilon = 0.1
 
     num_of_actions = 10
 
-    epsilons = [1.0, 0.5, 0.3, 0.1]
-    all_rates = np.zeros((len(epsilons), runs, steps))
+    alphas = [None, 0.9, 0.8, 0.5]
+    all_rates = np.zeros((len(alphas), runs, steps))
 
-    for eps_i, epsilon in enumerate(epsilons):
+    for i, alpha in enumerate(alphas):
         for run in range(runs):
-            bandit = Bandit(num_of_actions)
-            agent = Agent(num_of_actions, epsilon=epsilon)
+            bandit = Bandit(num_of_actions, use_noise=True)
+            agent = Agent(num_of_actions, epsilon=epsilon, alpha=alpha)
 
             agent_total_reward = 0
 
@@ -34,12 +35,12 @@ if __name__ == "__main__":
                 agent_total_rewards.append(agent_total_reward)
                 agent_rates.append(agent_total_reward / (step + 1))
 
-            all_rates[eps_i][run] = agent_rates
+            all_rates[i][run] = agent_rates
 
     avg_agent_rates = np.average(all_rates, axis=1)
 
-    for eps_i, epsilon in enumerate(epsilons):
-        plt.plot(avg_agent_rates[eps_i], label=f"epsilon: {epsilon}")
+    for i, alpha in enumerate(alphas):
+        plt.plot(avg_agent_rates[i], label=f"alpha: {alpha}")
 
     plt.xlabel("Steps")
     plt.ylabel("Rates")

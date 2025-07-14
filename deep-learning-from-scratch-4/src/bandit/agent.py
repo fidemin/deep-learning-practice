@@ -9,16 +9,20 @@ class Agent:
         action_size: int,
         *,
         epsilon: float = 0.1,
+        alpha: float | None = None
     ):
         self._action_size = action_size
         self._epsilon = epsilon
         self._Qs = np.zeros(action_size)
         self._ns = np.zeros(action_size)
+        self._alpha = alpha
 
     def update(self, action: int, reward: int | float):
         self._ns[action] += 1
+
+        alpha = self._alpha if self._alpha else self._ns[action]
         self._Qs[action] = (
-            self._Qs[action] + (reward - self._Qs[action]) / self._ns[action]
+            self._Qs[action] + (reward - self._Qs[action]) / alpha
         )
 
     def get_action(self):
